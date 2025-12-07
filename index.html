@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Slimdoor Portal System</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0b0f1a;
+      --panel: rgba(255, 255, 255, 0.06);
+      --stroke: rgba(255, 255, 255, 0.14);
+      --text: #e5ecff;
+      --muted: #9eb4d1;
+      --safe: #4ade80;
+      --danger: #f87171;
+      --unstable: #fbbf24;
+      --unknown: #a78bfa;
+      --cyan: #2dd4bf;
+      --accent: linear-gradient(135deg, #3b82f6, #22d3ee 40%, #8b5cf6);
+      --glow: 0 0 30px rgba(104, 225, 255, 0.5);
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Space Grotesk", "DM Mono", system-ui, -apple-system, sans-serif;
+      background: radial-gradient(circle at 20% 20%, rgba(68, 207, 255, 0.08), transparent 26%),
+                  radial-gradient(circle at 80% 0%, rgba(158, 109, 255, 0.12), transparent 22%),
+                  radial-gradient(circle at 60% 80%, rgba(250, 199, 92, 0.08), transparent 26%),
+                  var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      line-height: 1.6;
+      letter-spacing: 0.02em;
+      overflow-x: hidden;
+    }
+
+    main {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 72px 24px 120px;
+    }
+
+    header.hero {
+      position: relative;
+      padding: 48px 0 80px;
+      text-align: center;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 14px;
+      border: 1px solid var(--stroke);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.04);
+      color: var(--muted);
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      margin-bottom: 22px;
+      box-shadow: var(--glow);
+    }
+
+    .hero h1 {
+      font-size: clamp(28px, 4vw, 48px);
+      margin: 0 0 12px;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    .hero p {
+      margin: 0 auto 24px;
+      max-width: 640px;
+      color: var(--muted);
+      font-size: 18px;
+    }
+
+    .hero .door-figure {
+      margin: 42px auto 0;
+      width: min(520px, 80vw);
+      position: relative;
+      padding: 60px 0 30px;
+    }
+
+    .door-frame {
+      margin: 0 auto;
+      width: 180px;
+      height: 420px;
+      border-radius: 28px;
+      background: radial-gradient(circle at 30% 20%, rgba(255, 255, 255, 0.08), transparent 30%),
+                  linear-gradient(180deg, rgba(255, 255, 255, 0.15), transparent 45%),
+                  var(--accent);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.45), 0 0 40px rgba(78, 205, 255, 0.3);
+      position: relative;
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      animation: shimmer 4s ease-in-out infinite;
+    }
+
+    .door-frame::before {
+      content: "";
+      position: absolute;
+      inset: 10px;
+      border: 1px dashed rgba(255, 255, 255, 0.22);
+      border-radius: 22px;
+      filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.1));
+    }
+
+    .door-frame .led {
+      position: absolute;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: #6ee7ff;
+      top: 18px;
+      left: 50%;
+      transform: translateX(-50%);
+      box-shadow: 0 0 16px rgba(110, 231, 255, 0.8), 0 0 30px rgba(34, 211, 238, 0.6);
+      animation: pulse 2.4s ease-in-out infinite;
+    }
+
+    .door-shadow {
+      position: absolute;
+      left: 50%;
+      bottom: 10px;
+      transform: translateX(-50%);
+      width: 220px;
+      height: 40px;
+      background: radial-gradient(circle, rgba(0, 0, 0, 0.35), transparent 60%);
+      filter: blur(12px);
+    }
+
+    .cta-row {
+      margin-top: 24px;
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .cta {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 18px;
+      border-radius: 999px;
+      border: 1px solid var(--stroke);
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text);
+      text-decoration: none;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
+    }
+
+    .cta.primary {
+      background: var(--accent);
+      color: #0b1020;
+      border: none;
+      box-shadow: 0 15px 35px rgba(59, 130, 246, 0.35), 0 0 24px rgba(34, 211, 238, 0.35);
+    }
+
+    .cta:hover {
+      transform: translateY(-2px);
+      border-color: rgba(255, 255, 255, 0.3);
+      box-shadow: var(--glow);
+    }
+
+    section {
+      margin-top: 84px;
+    }
+
+    .section-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .section-head h2 {
+      margin: 0;
+      font-size: 22px;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .section-head .line {
+      flex: 1;
+      height: 1px;
+      background: linear-gradient(90deg, rgba(255, 255, 255, 0.25), transparent);
+    }
+
+    .gallery {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 18px;
+    }
+
+    .door-card {
+      position: relative;
+      padding: 16px;
+      border-radius: 18px;
+      background: var(--panel);
+      border: 1px solid var(--stroke);
+      overflow: hidden;
+      cursor: pointer;
+      transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease, filter 180ms ease;
+      min-height: 220px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      isolation: isolate;
+    }
+
+    .door-card::before {
+      content: "";
+      position: absolute;
+      inset: -10%;
+      background: radial-gradient(circle at 50% 30%, rgba(255, 255, 255, 0.08), transparent 42%);
+      opacity: 0.8;
+      z-index: 0;
+      transition: transform 180ms ease, opacity 200ms ease;
+    }
+
+    .door-card .door-mini {
+      width: 56px;
+      height: 128px;
+      border-radius: 12px;
+      position: relative;
+      margin: 0 auto;
+      box-shadow: 0 12px 18px rgba(0, 0, 0, 0.4);
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      overflow: hidden;
+    }
+
+    .door-card .door-mini::after {
+      content: "";
+      position: absolute;
+      inset: 8px;
+      border: 1px dashed rgba(255, 255, 255, 0.25);
+      border-radius: 8px;
+      opacity: 0.9;
+    }
+
+    .door-card .led {
+      position: absolute;
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      top: 7px;
+      left: 50%;
+      transform: translateX(-50%);
+      box-shadow: 0 0 10px currentColor;
+    }
+
+    .door-card h3 {
+      margin: 0;
+      font-size: 17px;
+      letter-spacing: 0.02em;
+    }
+
+    .door-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 10px;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      font-size: 12px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .tag::before {
+      content: "";
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: currentColor;
+      box-shadow: 0 0 12px currentColor;
+    }
+
+    .door-card:hover {
+      transform: translateY(-6px) rotate(-0.4deg);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4), 0 0 24px rgba(110, 231, 255, 0.3);
+      border-color: rgba(255, 255, 255, 0.3);
+      filter: drop-shadow(0 0 10px rgba(110, 231, 255, 0.22));
+    }
+
+    .door-card:hover::before {
+      transform: scale(1.05);
+      opacity: 1;
+    }
+
+    .door-card.active {
+      border-color: rgba(110, 231, 255, 0.7);
+      box-shadow: 0 22px 46px rgba(34, 211, 238, 0.32), 0 0 30px rgba(110, 231, 255, 0.32);
+    }
+
+    .detail {
+      display: grid;
+      grid-template-columns: minmax(260px, 1fr) 1.5fr;
+      gap: 24px;
+      padding: 22px;
+      border-radius: 22px;
+      background: linear-gradient(120deg, rgba(59, 130, 246, 0.08), rgba(59, 130, 246, 0)) , var(--panel);
+      border: 1px solid var(--stroke);
+      box-shadow: 0 20px 42px rgba(0, 0, 0, 0.35);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .detail::after {
+      content: "";
+      position: absolute;
+      inset: -30%;
+      background: radial-gradient(circle at 80% 10%, rgba(255, 255, 255, 0.08), transparent 55%);
+      pointer-events: none;
+    }
+
+    .detail-door {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 14px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .detail-door .door-large {
+      width: 120px;
+      height: 280px;
+      border-radius: 18px;
+      position: relative;
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      overflow: hidden;
+      box-shadow: 0 18px 30px rgba(0, 0, 0, 0.45);
+    }
+
+    .detail-door .door-large::after {
+      content: "";
+      position: absolute;
+      inset: 12px;
+      border: 1px dashed rgba(255, 255, 255, 0.25);
+      border-radius: 12px;
+      opacity: 0.9;
+    }
+
+    .detail-door .led {
+      position: absolute;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      box-shadow: 0 0 16px currentColor;
+    }
+
+    .detail-shadow {
+      width: 180px;
+      height: 28px;
+      background: radial-gradient(circle, rgba(0, 0, 0, 0.35), transparent 60%);
+      filter: blur(12px);
+    }
+
+    .detail-info {
+      position: relative;
+      z-index: 1;
+    }
+
+    .detail-info h3 {
+      margin: 0 0 6px;
+      font-size: 24px;
+    }
+
+    .detail-info .tag {
+      margin-right: 8px;
+    }
+
+    .status-line {
+      margin: 12px 0 14px;
+      color: var(--muted);
+      font-family: "DM Mono", monospace;
+      font-size: 14px;
+    }
+
+    .story {
+      margin: 12px 0 0;
+      color: #eaf2ff;
+      font-size: 16px;
+    }
+
+    .story small {
+      display: block;
+      color: var(--muted);
+      margin-top: 6px;
+    }
+
+    .about {
+      padding: 20px;
+      border-radius: 18px;
+      background: var(--panel);
+      border: 1px solid var(--stroke);
+      box-shadow: 0 12px 26px rgba(0, 0, 0, 0.3);
+    }
+
+    .about h3 {
+      margin: 0 0 12px;
+      font-size: 18px;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .about p {
+      margin: 8px 0;
+      color: var(--muted);
+    }
+
+    .about strong {
+      color: var(--text);
+    }
+
+    .cube-note {
+      display: inline-flex;
+      margin-top: 12px;
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px dashed rgba(255, 255, 255, 0.2);
+      background: rgba(255, 255, 255, 0.04);
+      font-family: "DM Mono", monospace;
+      color: #c3e8ff;
+    }
+
+    @keyframes shimmer {
+      0% { filter: hue-rotate(0deg) brightness(1); }
+      50% { filter: hue-rotate(8deg) brightness(1.08); }
+      100% { filter: hue-rotate(0deg) brightness(1); }
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: translateX(-50%) scale(1); opacity: 0.9; }
+      50% { transform: translateX(-50%) scale(1.2); opacity: 1; }
+    }
+
+    @media (max-width: 840px) {
+      .detail {
+        grid-template-columns: 1fr;
+      }
+      .detail-door {
+        order: 2;
+      }
+    }
+
+    @media (max-width: 600px) {
+      main { padding: 52px 18px 80px; }
+      .hero .door-figure { width: 100%; }
+      .gallery { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
+      .door-card { min-height: 200px; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header class="hero">
+      <div class="badge">Department of Dimensional Doors · Post-War Catalog</div>
+      <h1>Slimdoor Portal System – Post-War Dimensional Access Program</h1>
+      <p>Each door leads to a different story. Each story leads to a different world.</p>
+      <div class="door-figure">
+        <div class="door-frame">
+          <div class="led"></div>
+        </div>
+        <div class="door-shadow"></div>
+      </div>
+      <div class="cta-row">
+        <a class="cta primary" href="#gallery">Access Slimdoor Archives</a>
+        <a class="cta" href="#about">Program Briefing</a>
+      </div>
+    </header>
+
+    <section id="gallery">
+      <div class="section-head">
+        <h2>Door Gallery · Slimdoor Archives</h2>
+        <div class="line"></div>
+      </div>
+      <div class="gallery" id="doorGallery"></div>
+    </section>
+
+    <section id="detail">
+      <div class="section-head">
+        <h2>Door Detail · Field Archive</h2>
+        <div class="line"></div>
+      </div>
+      <div class="detail">
+        <div class="detail-door">
+          <div class="door-large" id="detailDoor">
+            <div class="led"></div>
+          </div>
+          <div class="detail-shadow"></div>
+        </div>
+        <div class="detail-info">
+          <div id="detailTags"></div>
+          <h3 id="detailTitle"></h3>
+          <div class="status-line" id="detailStatus"></div>
+          <div class="story">
+            <p id="detailStory"></p>
+            <small id="detailNote"></small>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="about">
+      <div class="section-head">
+        <h2>About · Portal Program</h2>
+        <div class="line"></div>
+      </div>
+      <div class="about">
+        <h3>Post-War Dimensional Access Program</h3>
+        <p>After the Collapse, a skeletal department kept the surviving slimdoors alive. We catalog what remains, weld the unstable hinges, and log every resonance frequency by hand.</p>
+        <p><strong>Field Archivist / Survivor:</strong> You walk the aisles, note the anomalies, and listen for the hum right before a door shivers.</p>
+        <p><strong>Maintenance Crew:</strong> Rotating engineers keep the rails cold, the LEDs honest, and the vault sealed between scans.</p>
+        <p><strong>Protocol:</strong> Every entry demands a scan, a story, and a signature. Unstable gates are sealed unless Command signs off.</p>
+        <div class="cube-note">Only the family activation cube can unlock archived doors.</div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const doors = [
+      {
+        id: "verdant",
+        name: "Verdant Realm",
+        label: "SAFE",
+        color: "linear-gradient(160deg, #4ade80, #22c55e, #16a34a)",
+        led: "#4ade80",
+        status: "Last Scanned: 2097-03-14 · Status: SAFE · Access Level: Restricted",
+        story: "A rainforest stretched across endless glass canyons. The air tasted like fresh chlorophyll, and bioluminescent vines spelled out old coordinates.",
+        note: "Green because the world rebuilds faster than we can measure; first sight felt like stepping inside a living lung."
+      },
+      {
+        id: "infernum",
+        name: "Infernum",
+        label: "DANGER",
+        color: "linear-gradient(170deg, #f87171, #ef4444, #b91c1c)",
+        led: "#f87171",
+        status: "Last Scanned: 2097-02-02 · Status: DANGER · Access Level: Black-level",
+        story: "A city of obsidian spires floats over an ocean of magma. Ash falls like snow; every door handle is warm to the touch.",
+        note: "Red because heat leaks through the seams; the first entry seared the archivist's breath even with the suit sealed."
+      },
+      {
+        id: "wasteland",
+        name: "Wasteland Break",
+        label: "UNSTABLE",
+        color: "linear-gradient(160deg, #fbbf24, #eab308, #d97706)",
+        led: "#fbbf24",
+        status: "Last Scanned: 2097-01-18 · Status: UNSTABLE · Access Level: Restricted",
+        story: "Sandstorms roar between skeletal overpasses. Static dances above the dunes; old billboards still flicker for brands that never existed.",
+        note: "Yellow because the air is thick with charged dust; the first glimpse was a horizon of broken sunlit concrete."
+      },
+      {
+        id: "voidway",
+        name: "Voidway",
+        label: "UNKNOWN",
+        color: "linear-gradient(180deg, #a78bfa, #7c3aed, #4c1d95)",
+        led: "#a78bfa",
+        status: "Last Scanned: 2097-03-01 · Status: UNKNOWN · Access Level: Observation",
+        story: "Silence, then a corridor of floating steps. Gravity reorients every twelve meters; there is no sky, only distant velvet static.",
+        note: "Purple because nothing there reflects full light; the first entry felt like falling upward without moving."
+      },
+      {
+        id: "multifold",
+        name: "Multifold Continuum",
+        label: "SAFE",
+        color: "linear-gradient(145deg, #22d3ee, #0ea5e9, #38bdf8)",
+        led: "#22d3ee",
+        status: "Last Scanned: 2097-03-22 · Status: SAFE · Access Level: Research",
+        story: "A lattice of overlapping cities phasing through one another. Footsteps echo twice; every alley folds into another skyline.",
+        note: "Teal because the air ripples like water; the first sight was a horizon stitched together by moving reflections."
+      }
+    ];
+
+    const gallery = document.getElementById("doorGallery");
+    const detailDoor = document.getElementById("detailDoor");
+    const detailTitle = document.getElementById("detailTitle");
+    const detailStatus = document.getElementById("detailStatus");
+    const detailStory = document.getElementById("detailStory");
+    const detailNote = document.getElementById("detailNote");
+    const detailTags = document.getElementById("detailTags");
+
+    function tagColor(label) {
+      if (label === "SAFE") return "var(--safe)";
+      if (label === "DANGER") return "var(--danger)";
+      if (label === "UNSTABLE") return "var(--unstable)";
+      return "var(--unknown)";
+    }
+
+    function createCard(door, activeId) {
+      const card = document.createElement("div");
+      card.className = "door-card";
+      card.dataset.id = door.id;
+      if (door.id === activeId) card.classList.add("active");
+
+      const mini = document.createElement("div");
+      mini.className = "door-mini";
+      mini.style.background = door.color;
+
+      const led = document.createElement("div");
+      led.className = "led";
+      led.style.color = door.led;
+      led.style.background = door.led;
+      mini.appendChild(led);
+
+      const name = document.createElement("h3");
+      name.textContent = door.name;
+
+      const meta = document.createElement("div");
+      meta.className = "door-meta";
+
+      const tag = document.createElement("span");
+      tag.className = "tag";
+      tag.style.color = tagColor(door.label);
+      tag.textContent = door.label;
+
+      const scan = document.createElement("span");
+      scan.textContent = door.status.split("·")[0].trim();
+
+      meta.append(tag, scan);
+      card.append(mini, name, meta);
+      card.addEventListener("click", () => selectDoor(door.id, true));
+      return card;
+    }
+
+    function renderGallery(activeId) {
+      gallery.innerHTML = "";
+      doors.forEach((door) => {
+        const card = createCard(door, activeId);
+        gallery.appendChild(card);
+      });
+    }
+
+    function selectDoor(id, shouldScroll) {
+      const door = doors.find((d) => d.id === id);
+      if (!door) return;
+      renderGallery(id);
+      detailDoor.style.background = door.color;
+      detailDoor.querySelector(".led").style.color = door.led;
+      detailDoor.querySelector(".led").style.background = door.led;
+      detailTitle.textContent = door.name;
+      detailStatus.textContent = door.status;
+      detailStory.textContent = door.story;
+      detailNote.textContent = door.note;
+
+      detailTags.innerHTML = "";
+      const tag = document.createElement("span");
+      tag.className = "tag";
+      tag.style.color = tagColor(door.label);
+      tag.textContent = door.label;
+      detailTags.appendChild(tag);
+
+      if (shouldScroll) {
+        document.getElementById("detail").scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      selectDoor("verdant", false);
+    });
+  </script>
+</body>
+</html>

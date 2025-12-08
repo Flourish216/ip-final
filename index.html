@@ -374,6 +374,51 @@
       box-shadow: 0 0 10px currentColor;
     }
 
+    .route-line {
+      margin: 10px 0 4px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 13px;
+      letter-spacing: 0.04em;
+      color: #cfe3ff;
+    }
+
+    .route-label {
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .tiny-btn {
+      padding: 6px 10px;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.22);
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text);
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 12px;
+      letter-spacing: 0.06em;
+      cursor: pointer;
+      transition: border-color 120ms ease, box-shadow 120ms ease, transform 120ms ease;
+    }
+
+    .tiny-btn:hover {
+      border-color: rgba(255, 255, 255, 0.35);
+      box-shadow: 0 0 14px rgba(80, 196, 255, 0.25);
+      transform: translateY(-1px);
+    }
+
+    .route-note {
+      margin: 0 0 2px;
+      color: var(--muted);
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 12px;
+      letter-spacing: 0.03em;
+    }
+
     .detail-narrative {
       margin: 6px 0 0;
       color: var(--text);
@@ -498,7 +543,7 @@
       <h1>SLIMDOOR PORTAL ARCHIVES</h1>
       <h2>Post-War Dimensional Access Program</h2>
       <p>After the blasts, most of the cities are gone. Only these slim wooden doors remain, each locking onto a different dimension. This terminal keeps the surviving gates cataloged and judged before anyone risks a crossing.</p>
-      <p>We log the rails, LEDs, and resonance scans; one slip and a breach spills into the last habitable vaults. Every entry is a decision about what to save and what to seal.</p>
+      <p>Routing is non-deterministic now—every activation re-rolls the target dimension. We log whatever the rails choose, in case the next lock drifts into a breach.</p>
       <div class="status-line">
         <span class="status-dot"></span>
         <span class="status-dot danger"></span>
@@ -511,7 +556,7 @@
         <h2>Door Index</h2>
         <div class="rule"></div>
       </div>
-      <div class="section-sub">Click a slimdoor to view its dimensional log and status.</div>
+      <div class="section-sub">Click a slimdoor to re-roll its lock and view the current dimensional log.</div>
       <div class="door-grid" id="doorGrid"></div>
     </section>
 
@@ -522,13 +567,19 @@
       </div>
       <div class="detail-panel">
         <div class="detail-text">
-          <div class="overline">Dimensional Log · Field Archivist</div>
+          <div class="overline" id="detailOverline">Dimensional Log · Field Archivist</div>
           <h3 class="detail-name" id="detailName"></h3>
           <p class="detail-tag" id="detailTag"></p>
           <div class="status-pill">
             <span class="status-dot-pill" id="detailStatusDot"></span>
             <span id="detailStatusText"></span>
           </div>
+          <div class="route-line">
+            <span class="route-label">Route Lock:</span>
+            <span id="routeResult"></span>
+            <button class="tiny-btn" id="rerollBtn" type="button">Re-seed</button>
+          </div>
+          <p class="route-note">Slimdoors re-roll destinations on activation; logs capture the current lock only.</p>
           <p class="detail-narrative" id="detailNarrative"></p>
           <div class="scan-log" id="detailScan"></div>
         </div>
@@ -608,6 +659,7 @@
     };
 
     const grid = document.getElementById("doorGrid");
+    const detailOverline = document.getElementById("detailOverline");
     const detailName = document.getElementById("detailName");
     const detailTag = document.getElementById("detailTag");
     const detailStatusText = document.getElementById("detailStatusText");
@@ -617,11 +669,19 @@
     const detailDoor = document.getElementById("detailDoor");
     const detailLed = document.getElementById("detailLed");
     const detailCode = document.getElementById("detailCode");
+    const routeResult = document.getElementById("routeResult");
+    const rerollBtn = document.getElementById("rerollBtn");
 
-    let activeId = "verdant";
+    let activeGateId = doorData[Math.floor(Math.random() * doorData.length)].id;
+    let currentRouteId = doorData[Math.floor(Math.random() * doorData.length)].id;
 
     function statusColor(status) {
       return colors[status] || "var(--unknown)";
+    }
+
+    function randomRouteId() {
+      const pick = Math.floor(Math.random() * doorData.length);
+      return doorData[pick].id;
     }
 
     function createCard(door) {
@@ -629,7 +689,7 @@
       card.type = "button";
       card.className = "door-card";
       card.dataset.id = door.id;
-      card.setAttribute("aria-pressed", door.id === activeId);
+      card.setAttribute("aria-pressed", door.id === activeGateId);
 
       const overline = document.createElement("div");
       overline.className = "overline";
@@ -665,34 +725,50 @@
       grid.innerHTML = "";
       doorData.forEach((door) => {
         const card = createCard(door);
-        if (door.id === activeId) {
+        if (door.id === activeGateId) {
           card.classList.add("active");
+          card.style.boxShadow = `0 20px 38px rgba(0, 0, 0, 0.45), 0 0 28px ${statusColor(door.status)}55`;
         }
-        card.style.boxShadow = door.id === activeId ? `0 20px 38px rgba(0, 0, 0, 0.45), 0 0 28px ${statusColor(door.status)}55` : "none";
         grid.appendChild(card);
       });
     }
 
-    function selectDoor(id) {
-      const door = doorData.find((d) => d.id === id);
-      if (!door) return;
-      activeId = id;
-      detailName.textContent = door.name;
-      detailTag.textContent = door.tag;
-      detailStatusText.textContent = `STATUS: ${door.status}`;
-      detailStatusDot.style.background = statusColor(door.status);
-      detailStatusDot.style.boxShadow = `0 0 10px ${statusColor(door.status)}`;
-      detailNarrative.textContent = door.narrative;
-      detailScan.textContent = door.scanLog;
-      detailCode.textContent = door.code;
-      detailLed.style.background = statusColor(door.status);
-      detailLed.style.boxShadow = `0 0 14px ${statusColor(door.status)}, 0 0 32px ${statusColor(door.status)}`;
-      detailDoor.style.boxShadow = `inset 0 0 30px ${statusColor(door.status)}33, 0 26px 40px rgba(0,0,0,0.5)`;
-      renderGrid();
+    function updateDetail() {
+      const gate = doorData.find((d) => d.id === activeGateId);
+      const route = doorData.find((d) => d.id === currentRouteId);
+      if (!gate || !route) return;
+
+      detailOverline.textContent = `GATE SELECTED: ${gate.code} · RANDOM LOCK DRIFT`;
+      detailName.textContent = route.name;
+      detailTag.textContent = route.tag;
+      detailStatusText.textContent = `STATUS: ${route.status}`;
+      detailStatusDot.style.background = statusColor(route.status);
+      detailStatusDot.style.boxShadow = `0 0 10px ${statusColor(route.status)}`;
+      detailNarrative.textContent = route.narrative;
+      detailScan.textContent = route.scanLog;
+      routeResult.textContent = `${gate.code} ⇒ ${route.code} · ${route.name}`;
+
+      detailCode.textContent = gate.code;
+      detailLed.style.background = statusColor(route.status);
+      detailLed.style.boxShadow = `0 0 14px ${statusColor(route.status)}, 0 0 32px ${statusColor(route.status)}`;
+      detailDoor.style.boxShadow = `inset 0 0 30px ${statusColor(route.status)}33, 0 26px 40px rgba(0,0,0,0.5)`;
     }
 
+    function selectDoor(id) {
+      activeGateId = id;
+      currentRouteId = randomRouteId();
+      renderGrid();
+      updateDetail();
+    }
+
+    rerollBtn.addEventListener("click", () => {
+      currentRouteId = randomRouteId();
+      updateDetail();
+    });
+
     document.addEventListener("DOMContentLoaded", () => {
-      selectDoor(activeId);
+      renderGrid();
+      updateDetail();
     });
   </script>
 </body>
